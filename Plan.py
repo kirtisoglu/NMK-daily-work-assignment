@@ -6,7 +6,7 @@
 # Define task lists of length 15, 20, 25, 30. 
 # Define their weight lists using parameters. Weights should be w_1, w_2, w_3, w_4.
 # And so we can change w_i's and test the result for different w_i's.
-# Define easy tasks for off days.
+# w_1's are easy tasks for off days. 
 
 
 # Define the possible programs in the village. 
