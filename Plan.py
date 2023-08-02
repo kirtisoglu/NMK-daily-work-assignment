@@ -9,6 +9,7 @@
 # w_1's are easy tasks for off days. We will add a constraint for that.
 
 
+
 # Define the possible programs in the village. 
 # Create two different types of each program. 
 # One has an off day in the week, the other does not have. 
