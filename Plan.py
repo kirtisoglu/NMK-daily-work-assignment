@@ -10,7 +10,7 @@
 
 
 # Define the possible programs in the village. 
-# Create two different type of high school programs. 
+# Create two different types of each program. 
 # One has an off day in the week, the other does not have. 
 
 
