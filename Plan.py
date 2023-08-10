@@ -15,9 +15,21 @@ print("Hoş geldiniz")
 
 excel_file = './ornekgorev.xlsx' 
 sheet_name = 'Sayfa1'
+print("Görevleriniz {} dosyasında,{} sayfasından okunuyor".format(excel_file, sheet_name))
+
 
 data = pd.read_excel(excel_file, sheet_name=sheet_name)
 allTasks = data.values
+
+## Define the first column as task names and the corresponding second column as the weight of it.
+
+
+
+
+## Define w_1, w_2, w_3, w_4.
+## For example, let's take w_1=1, w_2=3, w_3=5, w=4=7 and see what happens.
+
+
 
 task_names = allTasks[:, 0]
 weights = allTasks[:, 1]
@@ -85,9 +97,7 @@ while True:
     except ValueError:
         print("Geçerli bir tam sayı girmediniz. Lütfen tekrar deneyin.")
 
-"""print("Tatil günleri olan grupların sayısı:", num_of_groups_with_easy_task_day)
-print("Tatil günleri:", ', '.join(easy_task_days))
-print("Tatil günleri olmayan grupların sayısı:", num_of_groups_without_easy_task_day)"""
+# Merge the programs in an order and calculate n.
 
 allGroups = []
 
@@ -99,6 +109,16 @@ for i in range(0, num_of_groups_with_easy_task_day +num_of_groups_without_easy_t
     
 allGroupsLength = len(allGroups)
 taskList = allTasks[0:allGroupsLength]
+
+
+
+
+
+
+
+# Now we know task lists, programs and their numbers, off days of programs, easy tasks. 
+# Dfine the objective function by using n, weights, and the main task list. 
+
 
 
 ## We might have different off-days, not only wednesday.
@@ -172,6 +192,7 @@ print("Optimal value of C:", value(C))
 
 
 # Define constraints.
+
 
 #her gruba her gün 1 görev
 for j in range(1, J + 1):
