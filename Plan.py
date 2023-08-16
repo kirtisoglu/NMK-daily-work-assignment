@@ -239,8 +239,8 @@ def get_initial_schedule(taskList):
             daily_tasks=easy_tasks
             random.shuffle(daily_tasks)
             tasks_to_remove=[]
-            for group in range(1, num_of_groups_with_easy_task_day):
-                task = daily_tasks[group-1]
+            for group in range(num_of_groups_with_easy_task_day):
+                task = daily_tasks[group]
                 tasks_to_remove.append(task)
                 initial_schedule[(group, task, day)]= 1
                 #print(f"Group {group} got Task {task} on Day {day}")
@@ -380,12 +380,12 @@ best_schedule= simulated_annealing(1000, 0.99, 1000)
 
 print("cost difference is", calculate_cost_difference(best_schedule))
 
-"""for day in range(1,8):
+for day in range(1,8):
     for task in range(1,len(taskList)+1):
         for group in range(1,n+1):
             if best_schedule[(group,task,day)]==1:
                 print(f"Group {group} got Task {task} on Day {day}")
-"""
+
 
 C = LpVariable("C", lowBound=0) 
 
