@@ -194,28 +194,7 @@ for i in range(1, I + 1):
     C_i.append(new_variable)
 
 
-def calculate_C_individual(i,x_values):
-    sum=0
-    for task in range (1,J+1):
-        for day in range(1,8):
-            if x_values[(i,task,day)] == 1:
-                weight_of_task=variables[allTasks[task-1][1]]
-                #print(weight_of_task,allTasks[task-1])
-                sum+=weight_of_task
-    return sum
 
-C = LpVariable("C", lowBound=0) 
-
-#Define C_i's
-C_i = [calculate_C_individual(i,x_values) for i in range(1, I + 1)]
-for i in range(1, I + 1):
-    problem += C >= C_i[i - 1]
-
-#objective function
-problem += C
-
-problem.solve()
-print("Optimal value of C:", value(C)) 
 
 # Define constraints.
 #easy tasks on off days
@@ -259,15 +238,18 @@ def get_initial_schedule(taskList):
         if day in easy_task_days:
             daily_tasks=easy_tasks
             random.shuffle(daily_tasks)
-
+            tasks_to_remove=[]
             for group in range(1, num_of_groups_with_easy_task_day):
-                task = daily_tasks[group]
+                task = daily_tasks[group-1]
+                tasks_to_remove.append(task)
                 initial_schedule[(group, task, day)]= 1
                 #print(f"Group {group} got Task {task} on Day {day}")
-            daily_tasks=hard_tasks
+                
+            new_list = list(filter(lambda x: x not in tasks_to_remove, daily_tasks))
+            daily_tasks=new_list
             random.shuffle(daily_tasks)
-            for group in range(1+num_of_groups_with_easy_task_day,1+num_of_groups_without_easy_task_day):
-                task=daily_tasks[group-1]
+            for group in range(len(daily_tasks)):
+                task=daily_tasks[group]
                 initial_schedule[((group, task, day))]=1
                 #print(f"Group {group} got Task {task} on Day {day}")
         else:
@@ -284,6 +266,17 @@ def get_initial_schedule(taskList):
 initial_schedule=get_initial_schedule(taskList)
 
 #print(calculate_C_individual(2,initial_schedule),calculate_C_individual(3,initial_schedule))
+
+def calculate_C_individual(i,x_values):
+    sum=0
+    for task in range (1,J+1):
+        for day in range(1,8):
+            if x_values[(i,task,day)] == 1:
+                weight_of_task=variables[allTasks[task-1][1]]
+                #print(weight_of_task,allTasks[task-1])
+                sum+=weight_of_task
+    return sum
+
 
 def calculate_cost_difference(schedule):
     group_costs=[]
@@ -385,15 +378,27 @@ def simulated_annealing(initial_temperature=1000, cooling_rate=0.99, iterations=
 best_schedule= simulated_annealing(1000, 0.99, 1000)
 #print(best_schedule)
 
-print(calculate_cost_difference(best_schedule))
+print("cost difference is", calculate_cost_difference(best_schedule))
 
-for day in range(1,8):
+"""for day in range(1,8):
     for task in range(1,len(taskList)+1):
         for group in range(1,n+1):
             if best_schedule[(group,task,day)]==1:
                 print(f"Group {group} got Task {task} on Day {day}")
+"""
 
+C = LpVariable("C", lowBound=0) 
 
+#Define C_i's
+C_i = [calculate_C_individual(i,best_schedule) for i in range(1, I + 1)]
+for i in range(1, I + 1):
+    problem += C >= C_i[i - 1]
+
+#objective function
+problem += C
+
+problem.solve()
+print("Optimal value of C:", value(C)) 
 
 
 
