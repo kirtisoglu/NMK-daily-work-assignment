@@ -239,17 +239,17 @@ def get_initial_schedule(taskList):
             daily_tasks=easy_tasks
             random.shuffle(daily_tasks)
             tasks_to_remove=[]
-            for group in range(num_of_groups_with_easy_task_day):
-                task = daily_tasks[group]
+            for group in range(1,1+num_of_groups_with_easy_task_day):
+                task = daily_tasks[group-1]
                 tasks_to_remove.append(task)
                 initial_schedule[(group, task, day)]= 1
                 #print(f"Group {group} got Task {task} on Day {day}")
                 
-            new_list = list(filter(lambda x: x not in tasks_to_remove, daily_tasks))
+            new_list = list(filter(lambda x: x not in tasks_to_remove, list(range(1,len(taskList)+1))))
             daily_tasks=new_list
             random.shuffle(daily_tasks)
-            for group in range(len(daily_tasks)):
-                task=daily_tasks[group]
+            for group in range(1+num_of_groups_with_easy_task_day,1+num_of_groups_with_easy_task_day+num_of_groups_without_easy_task_day):
+                task=daily_tasks[group-1-num_of_groups_with_easy_task_day]
                 initial_schedule[((group, task, day))]=1
                 #print(f"Group {group} got Task {task} on Day {day}")
         else:
@@ -382,7 +382,7 @@ print("cost difference is", calculate_cost_difference(best_schedule))
 
 for day in range(1,8):
     for task in range(1,len(taskList)+1):
-        for group in range(1,n+1):
+        for group in range(1,num_of_groups_with_easy_task_day+num_of_groups_without_easy_task_day+1):
             if best_schedule[(group,task,day)]==1:
                 print(f"Group {group} got Task {task} on Day {day}")
 
@@ -399,10 +399,26 @@ problem += C
 
 problem.solve()
 print("Optimal value of C:", value(C)) 
+print(best_schedule)
+print(len(best_schedule))
 
+filtered_schedule={}
+for key, value in best_schedule.items():
+    if value == 1:
+        filtered_schedule[key] = value
+print(filtered_schedule)
+print(len(filtered_schedule))
 
+# Create lists to hold the separate components of the tuple keys
+index_tuples = list(filtered_schedule.keys())
+value = list(filtered_schedule.values())
 
+# Create a DataFrame
+df = pd.DataFrame({
+    "Index Tuple": index_tuples,
+    "Value": value
+})
 
-
-
-# Print the task assignment as a table. Save the table.
+# Export the DataFrame to an Excel file
+excel_file_path = "output.xlsx"
+df.to_excel(excel_file_path, index=False)
