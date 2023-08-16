@@ -9,6 +9,7 @@ from math import exp
 from math import log
 import numpy as np
 import random
+import math
 
 
 # Define task lists of length 15, 20, 25, 30. 
@@ -104,7 +105,7 @@ while True:
     except ValueError:
         print("Geçerli bir tam sayı girmediniz. Lütfen tekrar deneyin.")
         
-
+n=num_of_groups_with_easy_task_day+num_of_groups_without_easy_task_day
 # Merge the programs in an order and calculate n.
 
 allGroups = []
@@ -114,6 +115,8 @@ for i in range(0, num_of_groups_with_easy_task_day +num_of_groups_without_easy_t
         "id": i + 1,
         "has_easy_task_days": i< num_of_groups_with_easy_task_day,
     })
+    
+    
     
 allGroupsLength = len(allGroups)
 taskList = allTasks[0:allGroupsLength]
@@ -195,7 +198,7 @@ def calculate_C_individual(i,x_values):
     sum=0
     for task in range (1,J+1):
         for day in range(1,8):
-            if x_values[(2,task,day)] == 1:
+            if x_values[(i,task,day)] == 1:
                 weight_of_task=variables[allTasks[task-1][1]]
                 #print(weight_of_task,allTasks[task-1])
                 sum+=weight_of_task
@@ -257,8 +260,8 @@ def get_initial_schedule(taskList):
             daily_tasks=easy_tasks
             random.shuffle(daily_tasks)
 
-            for group in range(1, 1 + num_of_groups_with_easy_task_day):
-                task = daily_tasks[group-1]
+            for group in range(1, num_of_groups_with_easy_task_day):
+                task = daily_tasks[group]
                 initial_schedule[(group, task, day)]= 1
                 #print(f"Group {group} got Task {task} on Day {day}")
             daily_tasks=hard_tasks
@@ -280,9 +283,9 @@ def get_initial_schedule(taskList):
 
 initial_schedule=get_initial_schedule(taskList)
 
-"""print(calculate_C_individual(2,initial_schedule))"""
+#print(calculate_C_individual(2,initial_schedule),calculate_C_individual(3,initial_schedule))
 
-"""def calculate_cost_difference(schedule):
+def calculate_cost_difference(schedule):
     group_costs=[]
     group_cost=0
     for i in range(1,I+1):
@@ -290,12 +293,111 @@ initial_schedule=get_initial_schedule(taskList)
         group_costs.append(group_cost)
     return max(group_costs) - min(group_costs)
 
-print(calculate_cost_difference(initial_schedule))"""
+def neighbor_schedule(current_schedule):
+    """
+    Generate a neighbor schedule by swapping tasks between two days.
+    """
+    day_to_swap = random.randint(1,7)
+    if day_to_swap in easy_task_days:
+        decision=random.randint(0,1)
+        if decision==0: #if I am going to change tasks between groups with easy task
+            group_to_swap1=random.randint(1,num_of_groups_with_easy_task_day)
+            group_to_swap2=random.randint(1,num_of_groups_with_easy_task_day)
+            while group_to_swap2 == group_to_swap1:
+                group_to_swap2 = random.randint(1,num_of_groups_with_easy_task_day)
+            task_to_swap1=1
+            task_to_swap2=2
+            for j in easy_tasks:
+                if current_schedule[group_to_swap1,j,day_to_swap]==1:
+                    task_to_swap1=j
+            for j in easy_tasks:
+                if current_schedule[group_to_swap2,j,day_to_swap]==1:
+                    task_to_swap2=j
+            current_schedule[(group_to_swap1,task_to_swap1,day_to_swap)]==0
+            current_schedule[(group_to_swap1,task_to_swap2,day_to_swap)]==1
+            current_schedule[(group_to_swap2,task_to_swap2,day_to_swap)]==0
+            current_schedule[(group_to_swap2,task_to_swap1,day_to_swap)]==1
+        else:
+            group_to_swap1=random.randint(1+num_of_groups_with_easy_task_day,num_of_groups_without_easy_task_day)
+            group_to_swap2=random.randint(1+num_of_groups_with_easy_task_day,num_of_groups_without_easy_task_day)
+            while group_to_swap2 == group_to_swap1:
+                group_to_swap2 = random.randint(1+num_of_groups_with_easy_task_day,num_of_groups_without_easy_task_day)
+            task_to_swap1=1
+            task_to_swap2=2
+            for j in hard_tasks:
+                if current_schedule[group_to_swap1,j,day_to_swap]==1:
+                    task_to_swap1=j
+            for j in hard_tasks:
+                if current_schedule[group_to_swap2,j,day_to_swap]==1:
+                    task_to_swap2=j
+            current_schedule[(group_to_swap1,task_to_swap1,day_to_swap)]==0
+            current_schedule[(group_to_swap1,task_to_swap2,day_to_swap)]==1
+            current_schedule[(group_to_swap2,task_to_swap2,day_to_swap)]==0
+            current_schedule[(group_to_swap2,task_to_swap1,day_to_swap)]==1
+         
+    else:
+        group_to_swap1=random.randint(1,num_of_groups_with_easy_task_day+num_of_groups_without_easy_task_day)
+        group_to_swap2=random.randint(1,num_of_groups_with_easy_task_day+num_of_groups_without_easy_task_day)
+        while group_to_swap2 == group_to_swap1:
+            group_to_swap2 = random.randint(1,num_of_groups_with_easy_task_day+num_of_groups_without_easy_task_day)
+        task_to_swap1=1
+        task_to_swap2=2
+        for j in range (1,1+len(taskList)):
+            if current_schedule[(group_to_swap1,j,day_to_swap)]==1:
+                task_to_swap1=j
+        for j in hard_tasks:
+            if current_schedule[(group_to_swap2,j,day_to_swap)]==1:
+                task_to_swap2=j
+            current_schedule[(group_to_swap1,task_to_swap1,day_to_swap)]==0
+            current_schedule[(group_to_swap1,task_to_swap2,day_to_swap)]==1
+            current_schedule[(group_to_swap2,task_to_swap2,day_to_swap)]==0
+            current_schedule[(group_to_swap2,task_to_swap1,day_to_swap)]==1
+    return current_schedule
+
+def simulated_annealing(initial_temperature=1000, cooling_rate=0.99, iterations=1000):
+    """
+    Simulated annealing algorithm for task scheduling with cost balancing among groups.
+    """
+    current_schedule = initial_schedule
+    current_cost_difference = calculate_cost_difference(initial_schedule)
+
+    best_schedule = current_schedule
+    best_cost_difference = current_cost_difference
+
+    temperature = initial_temperature
+
+    for _ in range(iterations):
+        new_schedule = neighbor_schedule(current_schedule)
+        new_cost_difference = calculate_cost_difference(new_schedule)
+
+        if new_cost_difference < current_cost_difference or random.random() < math.exp((current_cost_difference - new_cost_difference) / temperature):
+            current_schedule = new_schedule
+            current_cost_difference = new_cost_difference
+
+            if new_cost_difference < best_cost_difference:
+                best_schedule = new_schedule
+                best_cost_difference = new_cost_difference
+
+        temperature *= cooling_rate
+
+    return best_schedule
+
+best_schedule= simulated_annealing(1000, 0.99, 1000)
+#print(best_schedule)
+
+print(calculate_cost_difference(best_schedule))
+
+for day in range(1,8):
+    for task in range(1,len(taskList)+1):
+        for group in range(1,n+1):
+            if best_schedule[(group,task,day)]==1:
+                print(f"Group {group} got Task {task} on Day {day}")
 
 
 
 
-    
-# Convert your solution vector to a daily-task assignment of groups. 
+
+
+
 
 # Print the task assignment as a table. Save the table.
