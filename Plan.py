@@ -422,3 +422,31 @@ df = pd.DataFrame({
 # Export the DataFrame to an Excel file
 excel_file_path = "output.xlsx"
 df.to_excel(excel_file_path, index=False)
+
+df = pd.read_excel(excel_file_path)
+
+# Create a dictionary to store the organized data
+organized_data = {}
+
+# Iterate through each row in the DataFrame
+for index, row in df.iterrows():
+    index_tuple = row['Index Tuple']
+    value = row['Value']
+    i, j, k = map(int, index_tuple.strip('()').split(','))  # Extract i, j, k as integers
+    day = f"Day {k}"
+    group = f"Group {i}"
+    
+    if day not in organized_data:
+        organized_data[day] = {}
+    
+    organized_data[day][group] = f"Task {j}"
+
+# Sort the days in ascending order
+sorted_days = sorted(organized_data.keys(), key=lambda day: int(day.split()[1]))
+
+# Create a new DataFrame from the organized data with sorted days
+new_df = pd.DataFrame({day: organized_data[day] for day in sorted_days})
+
+# Export the DataFrame to a new Excel file
+output_excel_file = "output_organized_sorted.xlsx"
+new_df.to_excel(output_excel_file)
