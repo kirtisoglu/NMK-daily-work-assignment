@@ -6,13 +6,12 @@ import numpy as np
 import random
 import math
 
-# Define your problem parameters here
+
 num_groups = 30
 num_tasks = 30
 num_days = 7
 
-# Define your task scheduling problem as a dictionary of groups and tasks
-# For example: task_schedule[(group, task, day)] = 1 if the task is assigned to the group on the day
+
 task_schedule = {}
 
 # Define the weights for each task type
