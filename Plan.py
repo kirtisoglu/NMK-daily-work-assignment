@@ -2,23 +2,9 @@
 # This program does not remember what are assigned the last week. 
 # Define the libraries you need.
 import pandas as pd
-from pulp import LpVariable, LpProblem, LpBinary, LpMinimize, value, lpSum
-from random import randint
-from random import random
-from math import exp
-from math import log
 import numpy as np
 import random
 import math
-
-
-# Define task lists of length 15, 20, 25, 30. 
-# Define their weight lists using parameters. Weights should be w_1, w_2, w_3, w_4.
-# And so we can change w_i's and test the result for different w_i's.
-# w_1's are easy tasks for off days. We will add a constraint for that.
-
-#toplam 5 tane w_1 li easy task var o yüzden maksimum 5 tane izin günü olan grup alabiliyor şu an program
-#allTasks w_1 ler başa gelecek şekilde verilsin
 
 print("Hoş geldiniz")
 
@@ -28,33 +14,60 @@ print("Görevleriniz {} dosyasında,{} sayfasından okunuyor".format(excel_file,
 
 
 data = pd.read_excel(excel_file, sheet_name=sheet_name)
+#taskList w_1 lerden başlasın w_3 lere geçsin sonra w_2 ler sonra w_5 ler en son w_4 ler
 allTasks = data.values
-## Define the first column as task names and the corresponding second column as the weight of it.
+taskList= allTasks #beni düzelt sonra
+task_names = taskList[:, 0]
 
+num_of_programs=4
+programs_easy_task_days = {
+    "program_1": [2,3],
+    "program_2": [2,4],
+    "program_3": [7],
+    "program_4": None
+}
+num_groups = 30
+group_numbers_of_programs = {
+    "program_1": 5,
+    "program_2": 10,
+    "program_3": 7,
+    "program_4": 8
+}
+allGroups = []
 
+current_group = 1  # Initialize the current group counter
 
+for program, group_count in group_numbers_of_programs.items():
+    for i in range(group_count):
+        group = {
+            "id": current_group,
+            "program type": program
+        }
+        allGroups.append(group)
+        current_group += 1
+        
 
-## Define w_1, w_2, w_3, w_4.
-## For example, let's take w_1=1, w_2=3, w_3=5, w=4=7 and see what happens.
+num_tasks = 30
+num_days = 7
 
+r_1 = 20 #penalty parameter
+r_2 = 20
 
+task_schedule = {}
 
-task_names = allTasks[:, 0]
-weights = allTasks[:, 1]
+for group in range(1, num_groups + 1):
+    for task in range(1, num_tasks + 1):
+        for day in range(1, num_days + 1):
+            task_schedule[(group, task, day)] = 0
 
-## Define w_1, w_2, w_3, w_4.
-## For example, let's take w_1=1, w_2=3, w_3=5, w=4=7 and see what happens.
+# Define the weights for each task type
 variables = {
     'w_1': 1,
     'w_2': 3,
     'w_3': 5,
-    'w_4': 7
+    'w_4': 7,
+    "w_5": 5
 }
-#print(variables[allTasks[0][1]]) gives the first tasks weight
-
-# Create two different types of each program. 
-# One has an off day in the week, the other does not have. 
-# OR Ask program name, number of groups, and off day of the program as an input and skip the following.
 
 days = {
     "pazartesi": 1,
@@ -66,293 +79,36 @@ days = {
     "pazar": 7
 }
 
-num_of_groups_with_easy_task_day = None
-easy_task_days = []
-
-while True:
-    try:
-        num_of_groups_with_easy_task_day = int(input("Tatil günleri olan grupların sayısını giriniz: "))
-        if num_of_groups_with_easy_task_day < 0:
-            print("Lütfen 0 veya daha büyük bir değer girin.")
-        else:
-            break
-    except ValueError:
-        print("Geçerli bir tam sayı girmediniz. Lütfen tekrar deneyin.")
-
-while True:
-    try:
-        easy_task_days_input = input("Grupların tatil günlerini virgül ile ayırarak giriniz: ").split(',')
-        for day in easy_task_days_input:
-            day = day.strip().lower()
-            if day in days:
-                numerical_value = days.get(day)
-                easy_task_days.append(numerical_value)
-            else:
-                print(f"'{day}' geçerli bir gün ismi değil. Lütfen tekrar deneyin.")
-        break
-    except ValueError:
-        print("Geçerli bir gün ismi girmediniz. Lütfen tekrar deneyin.")
-
-num_of_groups_without_easy_task_day = None
-
-while True:
-    try:
-        num_of_groups_without_easy_task_day = int(input("Tatil günleri olmayan grupların sayısını giriniz: "))
-        if num_of_groups_without_easy_task_day < 0:
-            print("Lütfen 0 veya daha büyük bir değer girin.")
-        else:
-            break
-    except ValueError:
-        print("Geçerli bir tam sayı girmediniz. Lütfen tekrar deneyin.")
-        
-n=num_of_groups_with_easy_task_day+num_of_groups_without_easy_task_day
-# Merge the programs in an order and calculate n.
-
-allGroups = []
-
-for i in range(0, num_of_groups_with_easy_task_day +num_of_groups_without_easy_task_day):
-    allGroups.append({
-        "id": i + 1,
-        "has_easy_task_days": i< num_of_groups_with_easy_task_day,
-    })
-    
-    
-    
-allGroupsLength = len(allGroups)
-taskList = allTasks[0:allGroupsLength]
-#print(allGroups[0]["has_easy_task_days"])
-
-
-
-
-
-
-
-# Now we know task lists, programs and their numbers, off days of programs, easy tasks. 
-# Dfine the objective function by using n, weights, and the main task list. 
-
-
-
-## We might have different off-days, not only wednesday.
-## Call it easy-task-day. For example, undergrad programs might have
-## both wednesday and sunday to have easy tasks since sunday is the last day
-## for their program and some of the group members leave the village.  
-## So, it is possible to have 2 easy-task-day for a group. 
- 
-## Imagine you learned the easy-task-day of a group. How do you teach this to
-## your integer program? For the decision variable x_{ijk}, k indicates the days of week. 
-## k=3 for wednesday. Define a set of easy tasks E. Here is the constraint:
-## x_{ij3}=0 for groups i (i must be defined by using inputs) for all j in E_c, the complement of E.
-## Since we have a constraint to assign a task every day to each group, 
-## a task is assigned to group i on Wednesday from E.
-
-
-#toplam 5 tane w_1 li easy task var o yüzden maksimum 5 tane izin günü olan grup alabiliyor şu an program
-easy_tasks=[]
-for i in range(0,len(taskList)):
-    if taskList[i][1]=="w_1":
-        easy_tasks.append(i+1)
-hard_tasks=[]
-for i in range(0,len(taskList)):
-    if i+1 not in easy_tasks:
-        hard_tasks.append(i+1)
-
-
-# Merge the programs in an order and calculate n.
-# Pick the first list whose length exceed n. 
-# Delete unneccesary tasks from the list. 
-# Define it as the main task list.
-
-
-# Now we know task lists, programs and their numbers, off days of programs, easy tasks. 
-# Define the objective function by using n, weights, and the main task list. 
-
-I = allGroupsLength
-J = allGroupsLength
-K = 7
-
-problem = LpProblem("NMK-daily-work-assignment", LpMinimize)
-
-x_values = {}
-
-
-for i in range(1,I + 1):
-    for j in range(1,J + 1):
-        for k in range(1,K + 1):
-            var_name = f'x_{i}_{j}_{k}'
-            x_values[(i, j, k)] = LpVariable(var_name, cat=LpBinary)  
-for i in range(1, I + 1):
-    for j in range(1, J + 1):
-        for k in range(1, K + 1):
-            x_values[(i, j, k)] = 0  
-            
-#Create C_i's
-C_i = []
-for i in range(1, I + 1):
-    variable_name = f"C_{i}"
-    new_variable = LpVariable(variable_name, lowBound=0)
-    C_i.append(new_variable)
-
-
-
-
-# Define constraints.
-#easy tasks on off days
-for i in range(1, I+1):
-    #i=1,2,3,...,30
-    if allGroups[i-1]["has_easy_task_days"]:
-        for numbers in easy_task_days:
-            for j in hard_tasks:
-                problem += x_values[(i, j, numbers)] == 0
-
-
-# iki gruba aynı görev atanmamalı 
-for j in range(1, J + 1):
-    for k in range(1, K + 1):
-        problem += lpSum(x_values[(i, j, k)] for i in range(1, I + 1)) == 1
-
-#her gruba her gün 1 görev
-
-for i in range(1, I + 1):
-    for k in range(1, K+1):
-        problem += lpSum(x_values[(i, j, k)] for j in range(1, J + 1)) == 1
-        
-#bir grup aynı gorevi iki defa yapmasın
-
-for i in range(1, I + 1):
-    for j in range(1, J + 1):
-        problem += lpSum(x_values[(i, j, k)] for k in range(1, 8)) == 1
-        
-
-# Construct Simulated Annealing and solve the problem.
-
-#initial schedule
-
-def get_initial_schedule(taskList):
-    #a random initial schedule
-    initial_schedule = x_values
-
-    daily_tasks = list(range(1,len(taskList)+1))
-
-    for day in range(1,8):
-        if day in easy_task_days:
-            daily_tasks=easy_tasks
-            random.shuffle(daily_tasks)
-            tasks_to_remove=[]
-            for group in range(1,1+num_of_groups_with_easy_task_day):
-                task = daily_tasks[group-1]
-                tasks_to_remove.append(task)
-                initial_schedule[(group, task, day)]= 1
-                #print(f"Group {group} got Task {task} on Day {day}")
-                
-            new_list = list(filter(lambda x: x not in tasks_to_remove, list(range(1,len(taskList)+1))))
-            daily_tasks=new_list
-            random.shuffle(daily_tasks)
-            for group in range(1+num_of_groups_with_easy_task_day,1+num_of_groups_with_easy_task_day+num_of_groups_without_easy_task_day):
-                task=daily_tasks[group-1-num_of_groups_with_easy_task_day]
-                initial_schedule[((group, task, day))]=1
-                #print(f"Group {group} got Task {task} on Day {day}")
-        else:
-            daily_tasks=list(range(1,len(taskList)+1))
-            random.shuffle(daily_tasks)
-            for group in range(1,1+num_of_groups_with_easy_task_day+num_of_groups_without_easy_task_day):
-                task=daily_tasks[group-1]
-                initial_schedule[((group, task, day))]=1
-                #print(f"Group {group} got Task {task} on Day {day}")
-           
-
-    return initial_schedule
-
-initial_schedule=get_initial_schedule(taskList)
-
-#print(calculate_C_individual(2,initial_schedule),calculate_C_individual(3,initial_schedule))
-
-def calculate_C_individual(i,x_values):
-    sum=0
-    for task in range (1,J+1):
-        for day in range(1,8):
-            if x_values[(i,task,day)] == 1:
-                weight_of_task=variables[allTasks[task-1][1]]
-                #print(weight_of_task,allTasks[task-1])
-                sum+=weight_of_task
-    return sum
-
+# Define the cost difference calculation function
+def calculate_C_individual(i, schedule):
+    total_cost = 0
+    for k in range(1, num_days + 1):
+        for j in range(1, num_tasks + 1):
+            if schedule.get((i, j, k), 0) == 1:
+                total_cost += variables[allTasks[j - 1][1]]
+    return total_cost
 
 def calculate_cost_difference(schedule):
-    group_costs=[]
-    group_cost=0
-    for i in range(1,I+1):
-        group_cost=calculate_C_individual(i,schedule)
-        group_costs.append(group_cost)
+    group_costs = [calculate_C_individual(i, schedule) for i in range(1, num_groups + 1)]
     return max(group_costs) - min(group_costs)
 
+# Define the neighbor schedule generation function
 def neighbor_schedule(current_schedule):
-    """
-    Generate a neighbor schedule by swapping tasks between two days.
-    """
-    day_to_swap = random.randint(1,7)
-    if day_to_swap in easy_task_days:
-        decision=random.randint(0,1)
-        if decision==0: #if I am going to change tasks between groups with easy task
-            group_to_swap1=random.randint(1,num_of_groups_with_easy_task_day)
-            group_to_swap2=random.randint(1,num_of_groups_with_easy_task_day)
-            while group_to_swap2 == group_to_swap1:
-                group_to_swap2 = random.randint(1,num_of_groups_with_easy_task_day)
-            task_to_swap1=1
-            task_to_swap2=2
-            for j in easy_tasks:
-                if current_schedule[group_to_swap1,j,day_to_swap]==1:
-                    task_to_swap1=j
-            for j in easy_tasks:
-                if current_schedule[group_to_swap2,j,day_to_swap]==1:
-                    task_to_swap2=j
-            current_schedule[(group_to_swap1,task_to_swap1,day_to_swap)]==0
-            current_schedule[(group_to_swap1,task_to_swap2,day_to_swap)]==1
-            current_schedule[(group_to_swap2,task_to_swap2,day_to_swap)]==0
-            current_schedule[(group_to_swap2,task_to_swap1,day_to_swap)]==1
-        else:
-            group_to_swap1=random.randint(1+num_of_groups_with_easy_task_day,num_of_groups_without_easy_task_day)
-            group_to_swap2=random.randint(1+num_of_groups_with_easy_task_day,num_of_groups_without_easy_task_day)
-            while group_to_swap2 == group_to_swap1:
-                group_to_swap2 = random.randint(1+num_of_groups_with_easy_task_day,num_of_groups_without_easy_task_day)
-            task_to_swap1=1
-            task_to_swap2=2
-            for j in hard_tasks:
-                if current_schedule[group_to_swap1,j,day_to_swap]==1:
-                    task_to_swap1=j
-            for j in hard_tasks:
-                if current_schedule[group_to_swap2,j,day_to_swap]==1:
-                    task_to_swap2=j
-            current_schedule[(group_to_swap1,task_to_swap1,day_to_swap)]==0
-            current_schedule[(group_to_swap1,task_to_swap2,day_to_swap)]==1
-            current_schedule[(group_to_swap2,task_to_swap2,day_to_swap)]==0
-            current_schedule[(group_to_swap2,task_to_swap1,day_to_swap)]==1
-         
-    else:
-        group_to_swap1=random.randint(1,num_of_groups_with_easy_task_day+num_of_groups_without_easy_task_day)
-        group_to_swap2=random.randint(1,num_of_groups_with_easy_task_day+num_of_groups_without_easy_task_day)
-        while group_to_swap2 == group_to_swap1:
-            group_to_swap2 = random.randint(1,num_of_groups_with_easy_task_day+num_of_groups_without_easy_task_day)
-        task_to_swap1=1
-        task_to_swap2=2
-        for j in range (1,1+len(taskList)):
-            if current_schedule[(group_to_swap1,j,day_to_swap)]==1:
-                task_to_swap1=j
-        for j in hard_tasks:
-            if current_schedule[(group_to_swap2,j,day_to_swap)]==1:
-                task_to_swap2=j
-            current_schedule[(group_to_swap1,task_to_swap1,day_to_swap)]==0
-            current_schedule[(group_to_swap1,task_to_swap2,day_to_swap)]==1
-            current_schedule[(group_to_swap2,task_to_swap2,day_to_swap)]==0
-            current_schedule[(group_to_swap2,task_to_swap1,day_to_swap)]==1
-    return current_schedule
+    new_schedule = current_schedule.copy()
 
-def simulated_annealing(initial_temperature=1000, cooling_rate=0.99, iterations=1000):
-    """
-    Simulated annealing algorithm for task scheduling with cost balancing among groups.
-    """
+    # Choose a random task assignment to change
+    group = random.randint(1, num_groups)
+    task = random.randint(1, num_tasks)
+    day = random.randint(1, num_days)
+    # Toggle the assignment (0 to 1 or 1 to 0)
+    new_schedule[(group, task, day)] = 1 - new_schedule.get((group, task, day), 0)
+
+    return new_schedule
+
+# Simulated Annealing algorithm
+def simulated_annealing(initial_schedule, initial_temperature=1000, cooling_rate=0.99, iterations=1000):
     current_schedule = initial_schedule
-    current_cost_difference = calculate_cost_difference(initial_schedule)
+    current_cost_difference = calculate_cost_difference(current_schedule)
 
     best_schedule = current_schedule
     best_cost_difference = current_cost_difference
@@ -375,39 +131,97 @@ def simulated_annealing(initial_temperature=1000, cooling_rate=0.99, iterations=
 
     return best_schedule
 
-best_schedule= simulated_annealing(1000, 0.99, 1000)
-#print(best_schedule)
+# Generate an initial schedule (you can modify this based on your logic)
+def generate_initial_schedule():
+    initial_schedule = task_schedule.copy() 
 
-print("cost difference is", calculate_cost_difference(best_schedule))
+    for k in range(1, 8):
+        count = 0
+        programs=[]
+        for key, value in programs_easy_task_days.items():
+            if value is not None and k in value:
+                count += group_numbers_of_programs[key]
+                programs.append(key)      
+        if count > 0:
+            index=0
+            index_1=0
+            task_numbers_1=[i for i in range(1,count+1)]
+            shuffled_easy_tasks=task_numbers_1.copy()
+            random.shuffle(shuffled_easy_tasks)
+            for i in range(1,num_groups+1):
+                if allGroups[i-1]["program type"] in programs:
+                    index+=1
+                    initial_schedule[i,shuffled_easy_tasks[index-1],k]=1
+                    #print(i,"th group", "got the", shuffled_easy_tasks[index-1], "task on",k,"th day")
+            task_numbers_3=[i for i in range(count+1,num_groups+1)]
+            shuffled_easy_tasks_2=task_numbers_3.copy()
+            random.shuffle(shuffled_easy_tasks_2) 
+            for i in range(1,num_groups+1):
+                if allGroups[i-1]["program type"] not in programs:
+                    #print(k,allGroups[i-1],"not")
+                    index_1+=1
+                    initial_schedule[i,shuffled_easy_tasks_2[index_1-1],k]=1
+                    #print(i,"th group", "got the", shuffled_easy_tasks_2[index_1-1], "task on",k,"th day")
+        else:
+            task_numbers_2=[i for i in range(1, num_groups + 1)]
+            shuffled_task_numbers_2 = task_numbers_2.copy()
+            random.shuffle(shuffled_task_numbers_2)
+            
+            for group_number in range(1, num_groups + 1):
+                initial_schedule[group_number, shuffled_task_numbers_2[group_number-1], k] = 1
+                #print(group_number,"th group", "got the", shuffled_task_numbers_2[group_number-1], "task on",k,"th day")
 
-for day in range(1,8):
-    for task in range(1,len(taskList)+1):
-        for group in range(1,num_of_groups_with_easy_task_day+num_of_groups_without_easy_task_day+1):
-            if best_schedule[(group,task,day)]==1:
-                print(f"Group {group} got Task {task} on Day {day}")
+    return initial_schedule
+
+initial_schedule = generate_initial_schedule()
 
 
-C = LpVariable("C", lowBound=0) 
 
-#Define C_i's
-C_i = [calculate_C_individual(i,best_schedule) for i in range(1, I + 1)]
-for i in range(1, I + 1):
-    problem += C >= C_i[i - 1]
+# Define the objective function and constraints
+def objective_function(schedule):
+    
+    C_i=[]
+    for i in range (1,num_groups+1):
+        cost = calculate_C_individual(i,schedule)
+        C_i.append(cost)
+    C = max(C_i)
+    
+    #constraint_1 : iki gruba aynı görev atanmamalı
+    sum_squared_1 = 0
+    for k in range(1,8):
+        for j in range(1,num_groups+1):
+            sum_i = 0
+            for i in range(1,num_groups+1):
+                sum_i += schedule[(i, j, k)]
+            """if sum_i!=1:
+                print(sum_i,j,k)"""
+            sum_squared_1 += (1 - sum_i)**2
+    #print("a",sum_squared_1)
+    
+    #constraint 2: Each group should have exactly one task each day
+    sum_squared_2 = 0
+    for k in range(1,8):
+        for i in range(1,num_groups+1):
+            sum_j = 0
+            for j in range(1,num_groups+1):
+                sum_j += schedule[(i, j, k)]
+            sum_squared_2 += (1 - sum_j)**2
+    #print("b",sum_squared_2)
+    obj= calculate_cost_difference(schedule)+ r_1 * sum_squared_1 +r_2 * sum_squared_2
+    return obj
 
-#objective function
-problem += C
 
-problem.solve()
-print("Optimal value of C:", value(C)) 
-print(best_schedule)
-print(len(best_schedule))
+# Run the simulated annealing algorithm
+best_schedule = simulated_annealing(initial_schedule, initial_temperature=1000, cooling_rate=0.99, iterations=1000)
+
+# Print the best schedule and its cost difference
+#print("Best Schedule:", best_schedule)
+print("Cost Difference:", calculate_cost_difference(best_schedule))
 
 filtered_schedule={}
 for key, value in best_schedule.items():
     if value == 1:
         filtered_schedule[key] = value
-print(filtered_schedule)
-print(len(filtered_schedule))
 
 # Create lists to hold the separate components of the tuple keys
 index_tuples = list(filtered_schedule.keys())
@@ -439,7 +253,7 @@ for index, row in df.iterrows():
     if day not in organized_data:
         organized_data[day] = {}
     
-    organized_data[day][group] = f"Task {j}"
+    organized_data[day][group] = f"{allTasks[j - 1]}"
 
 # Sort the days in ascending order
 sorted_days = sorted(organized_data.keys(), key=lambda day: int(day.split()[1]))
@@ -448,5 +262,6 @@ sorted_days = sorted(organized_data.keys(), key=lambda day: int(day.split()[1]))
 new_df = pd.DataFrame({day: organized_data[day] for day in sorted_days})
 
 # Export the DataFrame to a new Excel file
+
 output_excel_file = "output_organized_sorted.xlsx"
 new_df.to_excel(output_excel_file)
