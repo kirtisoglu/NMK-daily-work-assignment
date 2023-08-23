@@ -45,13 +45,12 @@ for program, group_count in group_numbers_of_programs.items():
         }
         allGroups.append(group)
         current_group += 1
-        
 
 num_tasks = 30
 num_days = 7
 
 r_1 = 20 #penalty parameter
-r_2 = 20
+r_2 = 20 #penalty parameter
 
 task_schedule = {}
 
