@@ -178,8 +178,6 @@ def neighbor_schedule(task_schedule):
             break
 
     # Swap the task assignments between the two groups for the selected day
-    """new_schedule[group1, task_1, day], new_schedule[group2, task_2, day] = new_schedule[group2, task_2, day], new_schedule[group1, task_1, day]"""
-    new_schedule[group1,task_1,day]=0
     new_schedule[group1,task_2,day]=1
     new_schedule[group2,task_2,day]=0
     new_schedule[group2,task_1,day]=1
