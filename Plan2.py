@@ -26,7 +26,7 @@ programs_easy_task_days = {
     "program 7": [3,7]
 }
 # Loading the Excel file
-file_path = './28_kişilik_liste.xlsx' 
+file_path = './Task List for 28 people.xlsx' 
 task_data = pd.read_excel(file_path)
 task_names = task_data['Tasks'].tolist()
 
@@ -40,8 +40,8 @@ variables = {
     "w_5": 5
 }
 
-# Replacing the weight labels with the corresponding numerical values
-task_data['Weights'] = task_data['Weights'].replace(variables)
+# Replacing the cost labels with the corresponding numerical values
+task_data['Costs'] = task_data['Costs'].replace(variables)
 
 # Creating Group Details DataFrame
 group_details = []
@@ -125,7 +125,7 @@ def calculate_total_costs(task_schedule):
         for day in range(num_days):
             tasks_assigned = np.where(task_schedule[group, :, day] == 1)[0]
             for task in tasks_assigned:
-                total_costs += task_data.at[int(task),"Weights"]
+                total_costs += task_data.at[int(task),"Costs"]
         total_costs_per_group[group] = total_costs
     
     return total_costs_per_group
