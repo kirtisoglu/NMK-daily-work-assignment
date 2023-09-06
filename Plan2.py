@@ -31,7 +31,7 @@ task_data = pd.read_excel(file_path)
 task_names = task_data['Tasks'].tolist()
 
 
-# Define the weights for each task type
+# Define the costs for each task type
 variables = {
     'w_1': 1,
     'w_2': 3,
