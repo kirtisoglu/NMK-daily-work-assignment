@@ -3,29 +3,35 @@ import pandas as pd
 import random
 
 # Constants and Variables
-num_of_programs = 4
+num_of_programs = 8
 num_groups = 28
 num_tasks = 28
 num_days = 7
 group_numbers_of_programs = {
-    "program_1": 5,
-    "program_2": 10,
-    "program_3": 7,
-    "program_4": 6,
+    "program_1": 7,
+    "program_2": 6,
+    "program_3": 8,
+    "program_4": 2,
+    "program 5": 3,
+    "program 6": 1,
+    "program 7": 1
 }
 programs_easy_task_days = {
-    "program_1": [2,3],
-    "program_2": [3,4],
-    "program_3": [7],
+    "program_1": None,
+    "program_2": None,
+    "program_3": None,
     "program_4": None,
+    "program 5": [3,7],
+    "program 6": None,
+    "program 7": [3,7]
 }
 # Loading the Excel file
-file_path = './28_kişilik_liste.xlsx' 
+file_path = './Task List for 28 people.xlsx' 
 task_data = pd.read_excel(file_path)
 task_names = task_data['Tasks'].tolist()
 
 
-# Define the weights for each task type
+# Define the costs for each task type
 variables = {
     'w_1': 1,
     'w_2': 3,
@@ -34,8 +40,8 @@ variables = {
     "w_5": 5
 }
 
-# Replacing the weight labels with the corresponding numerical values
-task_data['Weights'] = task_data['Weights'].replace(variables)
+# Replacing the cost labels with the corresponding numerical values
+task_data['Costs'] = task_data['Costs'].replace(variables)
 
 # Creating Group Details DataFrame
 group_details = []
@@ -119,7 +125,7 @@ def calculate_total_costs(task_schedule):
         for day in range(num_days):
             tasks_assigned = np.where(task_schedule[group, :, day] == 1)[0]
             for task in tasks_assigned:
-                total_costs += task_data.at[int(task),"Weights"]
+                total_costs += task_data.at[int(task),"Costs"]
         total_costs_per_group[group] = total_costs
     
     return total_costs_per_group
@@ -137,7 +143,7 @@ def constraint_1(task_schedule):
     for day in range(num_days):
         for task in range(num_tasks):
             groups_assigned = np.where(task_schedule[:, task, day] == 1)[0]
-            overlaps = len(groups_assigned) - 1  # Number of groups assigned minus one
+            overlaps = len(groups_assigned) - 1 
             total_overlaps += overlaps
     
     return total_overlaps
@@ -152,8 +158,23 @@ def constraint_2(task_schedule):
             assignments = len(tasks_assigned)
             if assignments > 1:
                 total_double_assignments += assignments - 1
-    
+            else:
+                total_double_assignments=0
     return total_double_assignments
+
+def constraint_3(task_schedule):
+    total_overlaps_of_task = 0
+    
+    for group in range(num_groups_corrected):
+        for task in range(num_tasks):
+            task_assigned = np.where(task_schedule[group, task, : ] == 1)[0]
+            overlaps = len(task_assigned) - 1 
+            total_overlaps_of_task += overlaps
+            if total_overlaps_of_task > 1:
+                return total_overlaps_of_task
+            else:
+                return 0
+    
 
 def neighbor_schedule(task_schedule):
     new_schedule = task_schedule.copy()
@@ -178,6 +199,8 @@ def neighbor_schedule(task_schedule):
             break
 
     # Swap the task assignments between the two groups for the selected day
+    """new_schedule[group1, task_1, day], new_schedule[group2, task_2, day] = new_schedule[group2, task_2, day], new_schedule[group1, task_1, day]"""
+    new_schedule[group1,task_1,day]=0
     new_schedule[group1,task_2,day]=1
     new_schedule[group2,task_2,day]=0
     new_schedule[group2,task_1,day]=1
@@ -197,15 +220,19 @@ def task_penalty(task_schedule):
     
     return total_penalty
 
+
 def objective_function(task_schedule):
     r_1=10000
     r_2=10000
     r_3=10000
+    r_4=10000
     total_costs_per_group = calculate_cost_difference(task_schedule)
     a = constraint_1(task_schedule)
     b = constraint_2(task_schedule)
     c = task_penalty(task_schedule)
-    return total_costs_per_group+ r_1 * a + r_2 * b + r_3 * c
+    d = constraint_3(task_schedule)
+    
+    return total_costs_per_group+ r_1 * a + r_2 * b + r_3 * c + r_4 * d
 
 def simulated_annealing(initial_schedule, initial_temperature, cooling_rate, max_iterations):
     current_solution = initial_schedule
@@ -240,9 +267,9 @@ def simulated_annealing(initial_schedule, initial_temperature, cooling_rate, max
     return best_solution, best_objective
 
 # Define parameters
-initial_temperature = 1000.0
+initial_temperature = 10000.0
 cooling_rate = 0.99
-max_iterations = 10000
+max_iterations = 15000
 
 # Call simulated annealing function
 final_solution, final_objective = simulated_annealing(initial_schedule, initial_temperature, cooling_rate, max_iterations)
