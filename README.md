@@ -5,3 +5,33 @@ To foster a harmonious communal living environment, task groups are formed and r
 
 This work is completed under the [Directed Reading Program Turkiye](https://sites.google.com/view/drp-turkey/). Cigdem Cemre Bolat worked on the project under the mentorship of Alaittin Kirtisoglu.
 
+## Installation 
+
+This Python application has been created to process a task list in an existing Excel file using the `numpy` and `pandas` libraries and save the results to another Excel file. Below, you will find a guide on how to use the application and its requirements.
+
+
+## Requirements
+
+To run the application, you will need the following requirements:
+
+- Python (versiyon 3.x)
+- Python packages  `numpy` and `pandas` 
+
+You can install these requirements using the following commands:
+
+```bash
+pip install numpy
+pip install pandas
+```
+
+## Usage
+Clone this repository to your computer or download the ZIP file.
+
+Navigate to the root directory of the application:
+
+```bash
+python main.py
+```
+
+Once the process is complete, the results will be saved in a new Excel file named "`output_organized_sorted.xlsx`"  This file will contain the processed data.
+
